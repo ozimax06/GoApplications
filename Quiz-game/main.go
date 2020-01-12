@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	QuizDurationSeconds := time.Duration(5)
 	quizChanel := make(chan bool, 1)
 	correctAnswers := 0
 	wrongAnswers := 0
@@ -28,7 +29,7 @@ func main() {
 		fmt.Println("=========")
 		fmt.Println("YOU FINISHED THE QUIZ!")
 		fmt.Println("=========")
-	case <-time.After(5 * time.Second):
+	case <-time.After(QuizDurationSeconds * time.Second):
 		fmt.Println("=========")
 		fmt.Println("TIME'S UP!")
 		fmt.Println("=========")
@@ -39,14 +40,10 @@ func main() {
 }
 
 func makeQuiz(problems []Problem, correctAnswers *int, wrongAnswers *int) bool {
-	reader := bufio.NewReader(os.Stdin)
-
+	
 	for i := 0; i < len(problems); i++ {
 
-		fmt.Print(problems[i].Question, " ?")
-		fmt.Println("-> ")
-		answer, _ := reader.ReadString('\n')
-		answer = strings.Replace(answer, "\n", "", -1)
+		answer: =AskQuestionAndGetAnswer(problems[i].Question)
 		if answer == problems[i].Answer {
 			*correctAnswers++
 		} else {
