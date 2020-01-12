@@ -11,41 +11,53 @@ import (
 )
 
 func main() {
-
-	//time.AfterFunc(4*time.Second, func() { fmt.Println("finished!") })
+	quizChanel := make(chan bool, 1)
+	correctAnswers := 0
+	wrongAnswers := 0
 	quizProblems := loadProblemsFromCvs("problems.csv")
-	correctCount, wrongCount := makeQuiz(quizProblems, 2)
-	showResults(quizProblems, correctCount, wrongCount)
+
+	// Run Quiz in it's own goroutine and pass back it's response into our channel.
+	go func() {
+		result := makeQuiz(quizProblems, &correctAnswers, &wrongAnswers)
+		quizChanel <- result
+	}()
+
+	// Listen on our channel AND a timeout channel - which ever happens first.
+	select {
+	case <-quizChanel:
+		fmt.Println("=========")
+		fmt.Println("YOU FINISHED THE QUIZ!")
+		fmt.Println("=========")
+	case <-time.After(5 * time.Second):
+		fmt.Println("=========")
+		fmt.Println("TIME'S UP!")
+		fmt.Println("=========")
+	}
+
+	showResults(quizProblems, correctAnswers, wrongAnswers)
 
 }
 
-func makeQuiz(problems []Problem, seconds time.Duration) (int, int) {
-	
-	correctAnswers := 0
-	wrongAnswers := 0
-
-	time.AfterFunc(seconds*time.Second, func() {
-		
-		//return correctAnswers, wrongAnswers
-	})
+func makeQuiz(problems []Problem, correctAnswers *int, wrongAnswers *int) bool {
+	reader := bufio.NewReader(os.Stdin)
 
 	for i := 0; i < len(problems); i++ {
 
-		answer := AskQuestionAndGetAnswer(problems[i].Question)
+		fmt.Print(problems[i].Question, " ?")
+		fmt.Println("-> ")
+		answer, _ := reader.ReadString('\n')
+		answer = strings.Replace(answer, "\n", "", -1)
 		if answer == problems[i].Answer {
-			correctAnswers++
+			*correctAnswers++
 		} else {
-			wrongAnswers++
+			*wrongAnswers++
 		}
 	}
-
-	return correctAnswers, wrongAnswers
+	return true
 }
 
 func showResults(problems []Problem, correctAnswers int, wrongAnswers int) {
-	fmt.Println("Result")
-	fmt.Println("=============")
-
+	fmt.Println("RESULT:")
 	fmt.Println("Correct Answers: ", correctAnswers)
 	fmt.Println("Wrong Answers: ", wrongAnswers)
 	fmt.Println("Total: ", len(problems))
