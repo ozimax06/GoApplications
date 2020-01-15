@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +12,16 @@ import (
 )
 
 func main() {
-	QuizDurationSeconds := time.Duration(5)
+	//go run main.go --help
+	//go run main.go -duration 20
+	quizDuration := flag.Int("duration", 10, "Duration Seconds?")
+	flag.Parse()
+	startQuiz(*quizDuration)
+
+}
+
+func startQuiz(duration int) {
+	QuizDurationSeconds := time.Duration(duration)
 	quizChanel := make(chan bool, 1)
 	correctAnswers := 0
 	wrongAnswers := 0
@@ -19,31 +29,25 @@ func main() {
 
 	// Run Quiz in it's own goroutine and pass back it's response into our channel.
 	go func() {
-		result := makeQuiz(quizProblems, &correctAnswers, &wrongAnswers)
+		result := startAskingQuizQuestions(quizProblems, &correctAnswers, &wrongAnswers)
 		quizChanel <- result
 	}()
 
 	// Listen on our channel AND a timeout channel - which ever happens first.
 	select {
 	case <-quizChanel:
-		fmt.Println("=========")
-		fmt.Println("YOU FINISHED THE QUIZ!")
-		fmt.Println("=========")
+		displayQuizFinishedMessage()
 	case <-time.After(QuizDurationSeconds * time.Second):
-		fmt.Println("=========")
-		fmt.Println("TIME'S UP!")
-		fmt.Println("=========")
+		displayTimesUpMessage()
 	}
 
 	showResults(quizProblems, correctAnswers, wrongAnswers)
-
 }
 
-func makeQuiz(problems []Problem, correctAnswers *int, wrongAnswers *int) bool {
-	
-	for i := 0; i < len(problems); i++ {
+func startAskingQuizQuestions(problems []Problem, correctAnswers *int, wrongAnswers *int) bool {
 
-		answer: =AskQuestionAndGetAnswer(problems[i].Question)
+	for i := 0; i < len(problems); i++ {
+		answer := askQuestionAndGetAnswer(problems[i].Question)
 		if answer == problems[i].Answer {
 			*correctAnswers++
 		} else {
@@ -60,7 +64,7 @@ func showResults(problems []Problem, correctAnswers int, wrongAnswers int) {
 	fmt.Println("Total: ", len(problems))
 }
 
-func AskQuestionAndGetAnswer(question string) string {
+func askQuestionAndGetAnswer(question string) string {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print(question, " ?")
 	fmt.Println("-> ")
@@ -85,6 +89,18 @@ func loadProblemsFromCvs(filename string) []Problem {
 		problems = append(problems, problem)
 	}
 	return problems
+}
+
+func displayQuizFinishedMessage() {
+	fmt.Println("=========")
+	fmt.Println("YOU FINISHED THE QUIZ!")
+	fmt.Println("=========")
+}
+
+func displayTimesUpMessage() {
+	fmt.Println("=========")
+	fmt.Println("TIME'S UP!")
+	fmt.Println("=========")
 }
 
 type Problem struct {
