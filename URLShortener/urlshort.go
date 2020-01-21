@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -13,8 +12,8 @@ func main() {
 		"/ozan": "https://www.yahoo.com",
 	}
 
-	handler := MapHandler(urlMaps)
-
+	defaultHandler := defaultHandle("https://ozanonder.tech")
+	handler := MapHandler(urlMaps, defaultHandler)
 	http.Handle("/", handler)
 
 	log.Println("Listening...")
@@ -28,32 +27,25 @@ func main() {
 // that each key in the map points to, in string format).
 // If the path is not provided in the map, then the fallback
 // http.Handler will be called instead.
-func MapHandler(pathsToUrls map[string]string /*, fallback http.Handler*/) http.HandlerFunc {
-	//	TODO: Implement this...
+func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.HandlerFunc {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		/*if r.URL.Path != "/" {
-			return
-		  }*/
 		requestPath := r.URL.Path
 		_, contains := pathsToUrls[requestPath]
 
 		if contains {
 			http.Redirect(w, r, pathsToUrls[requestPath], 301)
+		} else {
+			fallback.ServeHTTP(w, r)
 		}
-
 	})
-
 }
 
-func hello(w http.ResponseWriter, req *http.Request) {
-
-	fmt.Fprintf(w, "hello ozan\n")
-}
-
-func redirectToURL(w http.ResponseWriter, req *http.Request) {
-	w.Write([]byte("OK"))
-
+func defaultHandle(defaultURL string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, defaultURL, 301)
+	})
 }
 
 // YAMLHandler will parse the provided YAML and then return
