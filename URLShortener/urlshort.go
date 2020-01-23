@@ -1,11 +1,21 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
+	//ActivateManualMapHandler()
+	ReadYAMLAsByte("urlpath.yaml")
+}
+
+func ActivateManualMapHandler() {
+
 	var urlMaps = map[string]string{
 		"/dog":  "https://www.google.com",
 		"/cat":  "https://www.cat.com",
@@ -18,7 +28,6 @@ func main() {
 
 	log.Println("Listening...")
 	http.ListenAndServe(":8090", nil)
-
 }
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -64,7 +73,36 @@ func defaultHandle(defaultURL string) http.Handler {
 //
 // See MapHandler to create a similar http.HandlerFunc via
 // a mapping of paths to urls.
-//func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
-// TODO: Implement this...
-//return nil, nil
-//}
+func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
+	//TODO: Implement this...
+	return nil, nil
+}
+
+func ReadYAMLAsByte(filename string) []byte {
+
+	var list UrlPathList
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+	source := []byte(data)
+
+	err := yaml.Unmarshal(source, &list)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	fmt.Printf("--- list:\n%v\n\n", list)
+
+	return nil
+}
+
+type UrlPath struct {
+	path string
+	url  string
+}
+
+type UrlPathList struct {
+	list []UrlPath
+}
