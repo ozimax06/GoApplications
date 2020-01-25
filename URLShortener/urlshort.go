@@ -11,7 +11,8 @@ import (
 
 func main() {
 	//ActivateManualMapHandler()
-	ReadYAMLAsByte("urlpath.yaml")
+	TestYAML("urlpath.yaml")
+
 }
 
 func ActivateManualMapHandler() {
@@ -22,8 +23,8 @@ func ActivateManualMapHandler() {
 		"/ozan": "https://www.yahoo.com",
 	}
 
-	defaultHandler := defaultHandle("https://ozanonder.tech")
-	handler := MapHandler(urlMaps, defaultHandler)
+	fallbackHandler := defaultHandler("https://ozanonder.tech")
+	handler := MapHandler(urlMaps, fallbackHandler)
 	http.Handle("/", handler)
 
 	log.Println("Listening...")
@@ -51,7 +52,7 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 	})
 }
 
-func defaultHandle(defaultURL string) http.Handler {
+func defaultHandler(defaultURL string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, defaultURL, 301)
 	})
@@ -74,35 +75,62 @@ func defaultHandle(defaultURL string) http.Handler {
 // See MapHandler to create a similar http.HandlerFunc via
 // a mapping of paths to urls.
 func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
-	//TODO: Implement this...
+
+	/*return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		requestPath := r.URL.Path
+		_, contains := pathsToUrls[requestPath]
+
+		if contains {
+			http.Redirect(w, r, pathsToUrls[requestPath], 301)
+		} else {
+			fallback.ServeHTTP(w, r)
+		}
+	})*/
+
 	return nil, nil
 }
 
-func ReadYAMLAsByte(filename string) []byte {
-
-	var list UrlPathList
+//ReadYAMLFileAsByte reads external yaml file
+func ReadYAMLFileAsByte(filename string) []byte {
 
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
-	source := []byte(data)
 
-	err := yaml.Unmarshal(source, &list)
+	return data
+}
+
+func TestYAML(filename string) []byte {
+
+	var list URLPathList
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(data, &list)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 
-	fmt.Printf("--- list:\n%v\n\n", list)
+	for _, mapItem := range list.Maplist {
+		fmt.Println("Path: ", mapItem.Path)
+		fmt.Println("Url: ", mapItem.URL)
+	}
 
 	return nil
 }
 
-type UrlPath struct {
-	path string
-	url  string
+//URLPath represents each item
+type URLPath struct {
+	Path string
+	URL  string
 }
 
-type UrlPathList struct {
-	list []UrlPath
+//URLPathList is collection of url paths
+type URLPathList struct {
+	Maplist []URLPath
 }

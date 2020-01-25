@@ -1,9 +1,10 @@
-- path: /dog
-  url: https://www.google.com
-- path: /cat
-  url: https://www.cat.com
-- path: /ozan
-  url: https://www.yahoo.com
-- path: /software
-  url: https://www.geeksforgeeks.org
+maplist:
+  - path: /dog
+    url: https://www.google.com
+  - path: /cat
+    url: https://www.cat.com
+  - path: /ozan
+    url: https://www.yahoo.com
+  - path: /software
+    url: https://www.geeksforgeeks.org
 
