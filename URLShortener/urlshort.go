@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,11 +11,28 @@ import (
 )
 
 func main() {
-	//ActivateManualMapHandler()
-	TestYAML("urlpath.yaml")
+
+	ActivateYAMLHandler()
 
 }
 
+//ActivateYAMLHandler tests YANLhandler
+func ActivateYAMLHandler() {
+	fallbackHandler := DefaultHandler("https://ozanonder.tech")
+	yamlFile := ReadYAMLFileAsByte("urlpath.yaml")
+	handler, err := YAMLHandler(yamlFile, fallbackHandler)
+
+	if err != nil {
+		fmt.Println("error happened")
+	} else {
+		http.Handle("/", handler)
+		log.Println("Listening...")
+		http.ListenAndServe(":8090", nil)
+	}
+
+}
+
+//ActivateManualMapHandler tests MapHandler
 func ActivateManualMapHandler() {
 
 	var urlMaps = map[string]string{
@@ -23,7 +41,7 @@ func ActivateManualMapHandler() {
 		"/ozan": "https://www.yahoo.com",
 	}
 
-	fallbackHandler := defaultHandler("https://ozanonder.tech")
+	fallbackHandler := DefaultHandler("https://ozanonder.tech")
 	handler := MapHandler(urlMaps, fallbackHandler)
 	http.Handle("/", handler)
 
@@ -52,7 +70,8 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 	})
 }
 
-func defaultHandler(defaultURL string) http.Handler {
+//DefaultHandler redirects the incoming request to defaultURL
+func DefaultHandler(defaultURL string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, defaultURL, 301)
 	})
@@ -76,19 +95,30 @@ func defaultHandler(defaultURL string) http.Handler {
 // a mapping of paths to urls.
 func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 
-	/*return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var yamlError error
 
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		var list URLPathList
 		requestPath := r.URL.Path
-		_, contains := pathsToUrls[requestPath]
 
-		if contains {
-			http.Redirect(w, r, pathsToUrls[requestPath], 301)
+		err := yaml.Unmarshal(yml, &list)
+		if err != nil {
+			yamlError = errors.New("Error: Parsing YAML file")
+			fallback.ServeHTTP(w, r)
+
 		} else {
+
+			yamlError = nil
+			for _, mapItem := range list.Maplist {
+				if mapItem.Path == requestPath {
+					http.Redirect(w, r, mapItem.URL, 301)
+				}
+			}
 			fallback.ServeHTTP(w, r)
 		}
-	})*/
 
-	return nil, nil
+	}), yamlError
 }
 
 //ReadYAMLFileAsByte reads external yaml file
@@ -100,28 +130,6 @@ func ReadYAMLFileAsByte(filename string) []byte {
 	}
 
 	return data
-}
-
-func TestYAML(filename string) []byte {
-
-	var list URLPathList
-
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
-
-	err = yaml.Unmarshal(data, &list)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-
-	for _, mapItem := range list.Maplist {
-		fmt.Println("Path: ", mapItem.Path)
-		fmt.Println("Url: ", mapItem.URL)
-	}
-
-	return nil
 }
 
 //URLPath represents each item
