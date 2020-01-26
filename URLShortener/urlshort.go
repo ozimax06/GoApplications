@@ -96,29 +96,26 @@ func DefaultHandler(defaultURL string) http.Handler {
 func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 
 	var yamlError error
+	var parsedYaml URLPathList
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	err := yaml.Unmarshal(yml, &parsedYaml)
 
-		var list URLPathList
-		requestPath := r.URL.Path
+	if err != nil {
+		yamlError = errors.New("Error: Parsing YAML file")
+		return nil, yamlError
 
-		err := yaml.Unmarshal(yml, &list)
-		if err != nil {
-			yamlError = errors.New("Error: Parsing YAML file")
-			fallback.ServeHTTP(w, r)
+	}
+	pathMap := buildMap(parsedYaml)
+	return MapHandler(pathMap, fallback), nil
+}
 
-		} else {
+func buildMap(list URLPathList) map[string]string {
+	var result = make(map[string]string)
 
-			yamlError = nil
-			for _, mapItem := range list.Maplist {
-				if mapItem.Path == requestPath {
-					http.Redirect(w, r, mapItem.URL, 301)
-				}
-			}
-			fallback.ServeHTTP(w, r)
-		}
-
-	}), yamlError
+	for _, mapItem := range list.Maplist {
+		result[mapItem.Path] = mapItem.URL
+	}
+	return result
 }
 
 //ReadYAMLFileAsByte reads external yaml file

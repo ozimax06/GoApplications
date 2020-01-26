@@ -7,4 +7,7 @@ maplist:
     url: https://www.yahoo.com
   - path: /software
     url: https://www.geeksforgeeks.org
+  - path: /face
+    url: https://www.facebook.com
 
+ 
