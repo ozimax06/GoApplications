@@ -1,7 +1,6 @@
-package main
+package urlshort
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,12 +8,6 @@ import (
 
 	"gopkg.in/yaml.v2"
 )
-
-func main() {
-
-	ActivateYAMLHandler()
-
-}
 
 //ActivateYAMLHandler tests YANLhandler
 func ActivateYAMLHandler() {
@@ -95,18 +88,22 @@ func DefaultHandler(defaultURL string) http.Handler {
 // a mapping of paths to urls.
 func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 
-	var yamlError error
-	var parsedYaml URLPathList
-
-	err := yaml.Unmarshal(yml, &parsedYaml)
+	parsedYaml, err := parseYAML(yml)
 
 	if err != nil {
-		yamlError = errors.New("Error: Parsing YAML file")
-		return nil, yamlError
+		return nil, err
 
 	}
 	pathMap := buildMap(parsedYaml)
 	return MapHandler(pathMap, fallback), nil
+}
+
+func parseYAML(yml []byte) (URLPathList, error) {
+
+	var parsedYaml URLPathList
+	err := yaml.Unmarshal(yml, &parsedYaml)
+
+	return parsedYaml, err
 }
 
 func buildMap(list URLPathList) map[string]string {

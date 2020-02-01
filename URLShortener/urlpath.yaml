@@ -1,6 +1,6 @@
 maplist:
   - path: /dog
-    url: https://www.google.com
+    url: https://www.dogstrust.org.uk
   - path: /cat
     url: https://www.cat.com
   - path: /ozan
