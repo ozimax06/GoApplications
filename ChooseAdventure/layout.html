@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <style>
+    .done{
+        color: green;
+    }
+    </style>
+<title>Adventures</title>
+</head>
+<body>
+    <h1>{{.Title}}</h1>
+    {{range $i, $a := .Story}}
+        <p> {{$a}}</p>
+    {{end}}
+
+ 
+</body>
+</html>
