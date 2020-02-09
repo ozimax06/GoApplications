@@ -1,19 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-    <style>
-    .done{
-        color: green;
-    }
-    </style>
-<title>Adventures</title>
+    <link rel="stylesheet"  type="text/css" href="styles/main.css">
+    <title>Adventures</title>
 </head>
+<style>
+    #story-container{
+        width: 500px;
+    }
+</style>
 <body>
-    <h1>{{.Title}}</h1>
-    {{range $i, $a := .Story}}
-        <p> {{$a}}</p>
-    {{end}}
+    <div id="story-container"></div>
+        <h1>{{.Title}}</h1>
+        {{range $i, $a := .Story}}
+            <p> {{$a}}</p>
+        {{end}}
+        <hr/>
+        {{range $j, $o := .Options}}
+            <a href="/{{$o.Arc}}">{{$o.Text}}</a>
+            <br/>
+        {{end}}
+        
+    </div>
 
  
 </body>
