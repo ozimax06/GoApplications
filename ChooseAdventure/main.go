@@ -12,16 +12,15 @@ import (
 
 func main() {
 
-	template := template.Must(template.ParseFiles("layout.html"))
+	template := template.Must(template.ParseFiles("layout/layout.html"))
 	stories := getStories("stories.json")
-	mux := http.NewServeMux()
-
 	sh := &StoryHandler{Stories: stories, StoryTemplate: template}
 
-	mux.Handle("/", sh)
-	http.Handle("/styles/", http.StripPrefix("/styles/", http.FileServer(http.Dir("styles"))))
+	http.Handle("/", sh)
+	http.Handle("/layout/", http.StripPrefix("/layout/", http.FileServer(http.Dir("layout"))))
+
 	log.Println("Listening...")
-	http.ListenAndServe(":8090", mux)
+	http.ListenAndServe(":8090", nil)
 
 }
 
