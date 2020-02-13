@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -11,9 +12,9 @@ import (
 )
 
 func main() {
+	stories := getStories("stories.json")
 
 	template := template.Must(template.ParseFiles("layout/layout.html"))
-	stories := getStories("stories.json")
 	sh := &StoryHandler{Stories: stories, StoryTemplate: template}
 
 	http.Handle("/", sh)
@@ -40,15 +41,53 @@ func getStories(filename string) map[string]Arc {
 }
 
 func (sh *StoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var data Arc
+
 	requestPath := strings.Replace(r.URL.Path, "/", "", 1)
 	_, contains := sh.Stories[requestPath]
-	data := sh.Stories["intro"]
 
 	if contains {
 		data = sh.Stories[requestPath]
+	} else {
+		firstStory, err := getFirstStory(sh.Stories)
+
+		if err != nil {
+			panic(err)
+		}
+		data = sh.Stories[firstStory]
 	}
 
 	sh.StoryTemplate.Execute(w, data)
+}
+
+func getFirstStory(stories map[string]Arc) (string, error) {
+
+	for storyName := range stories {
+		if !isStoryReferenced(storyName, stories) {
+			return storyName, nil
+		}
+	}
+
+	return "", errors.New("first story couldn't be found!")
+}
+
+func isStoryReferenced(storyName string, stories map[string]Arc) bool {
+
+	for name, arc := range stories {
+
+		if name == storyName {
+			continue
+		}
+
+		storyOptions := arc.Options
+		for _, option := range storyOptions {
+
+			if option.Arc == storyName {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 type StoryHandler struct {
