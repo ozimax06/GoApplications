@@ -26,24 +26,40 @@ func main() {
 			log.Fatalf("error tokenizing HTML: %v", z.Err())
 		}
 
-		var tagName, tagAttribute, attributeValue []byte
-		var hasAttribute, hasMoreAttribute bool
-		tagName, hasAttribute = z.TagName()
+		if isStartAnchor(z, tokenType) {
+			href := getAnchorLink(z)
 
-		fmt.Println(string(tokenType.String()), ": ", string(tagName))
+			fmt.Println(href)
 
-		if hasAttribute {
-			for {
-				tagAttribute, attributeValue, hasMoreAttribute = z.TagAttr()
-				fmt.Println("Attr: ", string(tagAttribute), "AttrVal: ", string(attributeValue))
+		}
+	}
+}
 
-				if !hasMoreAttribute {
-					break
-				}
+func getAnchorLink(n *html.Tokenizer) string {
+	return getAttributeValue(n, "href")
+}
+
+func getAttributeValue(n *html.Tokenizer, attributeName string) string {
+
+	for {
+		attr, attrVal, hasMoreAttr := n.TagAttr()
+
+		if attr != nil && attrVal != nil {
+			if strings.ToLower(string(attr)) == attributeName {
+				return string(attrVal)
 			}
 		}
 
+		if !hasMoreAttr {
+			break
+		}
 	}
+	return ""
+}
+
+func isStartAnchor(n *html.Tokenizer, tokenType html.TokenType) bool {
+	name, _ := n.TagName()
+	return string(name) == "a" && tokenType.String() == "StartTag"
 }
 
 func getHTML(filePath string) io.Reader {
